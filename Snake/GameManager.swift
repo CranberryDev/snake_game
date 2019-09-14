@@ -41,6 +41,7 @@ class GameManager {
             
             checkForScore()
             checkForDeath()
+            finishGame()
         }
     }
     
@@ -113,6 +114,41 @@ class GameManager {
         }
     }
     
+    private func finishGame() {
+        if playerDirection == 0 && scene.playerPosition.count > 0 {
+            var hasFinished = true
+            let headOfSnake = scene.playerPosition[0]
+            //If game end than playerPosition would have only 1 element (head of snake)
+            for position in scene.playerPosition {
+                if headOfSnake != position {
+                    hasFinished = false
+                }
+            }
+            if hasFinished {
+                print("End game")
+                playerDirection = 4
+                updateScore()
+                //animation has completed
+                scene.scorePos = nil
+                scene.playerPosition.removeAll()
+                renderChanges()
+                //return to menu
+                scene.currentScore.run(SKAction.scale(to: 0, duration: 0.4)) {
+                    self.scene.currentScore.isHidden = true
+                }
+                scene.gameBG.run(SKAction.scale(to: 0, duration: 0.4)) {
+                    self.scene.gameBG.isHidden = true
+                    self.scene.gameLogo.isHidden = false
+                    self.scene.gameLogo.run(SKAction.move(to: CGPoint(x: 0, y: (self.scene.frame.size.height / 2) - 200), duration: 0.5)) {
+                        self.scene.playButton.isHidden = false
+                        self.scene.playButton.run(SKAction.scale(to: 1, duration: 0.3))
+                        self.scene.bestScore.run(SKAction.move(to: CGPoint(x: 0, y: self.scene.gameLogo.position.y  - 50), duration: 0.3))
+                    }
+                }
+            }
+        }
+    }
+    
     private func updatePlayerPosition() {
         var xChange = -1
         var yChange = 0
@@ -180,6 +216,15 @@ class GameManager {
         //X is actually randomY and Y is randomX, no ideas why
         scene.scorePos = CGPoint(x: randomX, y: randomY)
         ;
+    }
+    
+    private func updateScore() {
+        if currentScore > UserDefaults.standard.integer(forKey: "bestScore") {
+            UserDefaults.standard.set(currentScore, forKey: "bestScore")
+        }
+        currentScore = 0
+        scene.currentScore.text = "Score: 0"
+        scene.bestScore.text = "Best score \(UserDefaults.standard.integer(forKey: "bestScore"))"
     }
     
 }
